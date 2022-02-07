@@ -11,7 +11,7 @@ object Main
 {
 
   // print logback's internal status
-  StatusPrinter.print(LoggerFactory.getILoggerFactory().asInstanceOf[LoggerContext])
+  StatusPrinter.print(LoggerFactory.getILoggerFactory.asInstanceOf[LoggerContext])
 
   logger.info("Starting stream processor...")
   

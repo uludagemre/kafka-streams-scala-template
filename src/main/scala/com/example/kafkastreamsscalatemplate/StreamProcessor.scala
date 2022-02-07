@@ -1,18 +1,15 @@
 package com.example.kafkastreamsscalatemplate
 
-import java.util.Properties
-import java.util.concurrent.{CountDownLatch, TimeUnit}
-
 import com.lightbend.kafka.scala.streams.{KStreamS, StreamsBuilderS}
 import com.typesafe.scalalogging.StrictLogging
 import org.apache.kafka.common.serialization._
-import org.apache.kafka.streams.kstream._
 import org.apache.kafka.streams._
-import org.apache.kafka.streams.{KafkaStreams, StreamsBuilder, StreamsConfig, Topology}
+import org.apache.kafka.streams.kstream._
 import org.json4s.JValue
 import org.json4s.jackson.JsonMethods._
-import org.json4s.jackson.Serialization.{read, write}
 
+import java.util.Properties
+import java.util.concurrent.{CountDownLatch, TimeUnit}
 import scala.collection.JavaConverters._
 import scala.util.Try
 
@@ -23,7 +20,6 @@ object StreamProcessor extends StrictLogging{
   val outputTopic = Config.app.kafka.outputTopic
 
   // Formatter for json4s
-  import Json4sProtocol.formats
 
   // runs a stream and safely shuts down
   val latch: CountDownLatch = new CountDownLatch(1)
@@ -46,7 +42,7 @@ object StreamProcessor extends StrictLogging{
     }
     System.exit(0)
   }
-  
+
   /** Create the stream topology. 
     * Separating this logic makes testing easier.
     */
@@ -55,7 +51,7 @@ object StreamProcessor extends StrictLogging{
     inputTopic: String,
     outputTopic: String
   ): Topology = {
-  
+
     // Start the stream by creating a wrapped StreamsBuilder.
     val builderS = new StreamsBuilderS(builder)
 
@@ -92,7 +88,7 @@ object StreamProcessor extends StrictLogging{
     inputTopic: String,
     outputTopic: String
   ): Topology = {
-  
+
     // start the stream
     val source: KStream[String, String] = builder.stream(inputTopic)
 
@@ -100,12 +96,12 @@ object StreamProcessor extends StrictLogging{
     val outStream: KStream[String, String] =
       source.flatMap(new KeyValueMapper[String, String, java.lang.Iterable[KeyValue[String, String]]] {
         def apply(key: String, value: String): java.lang.Iterable[KeyValue[String, String]] = {
-          transform(key, value).map{ case (k, v) => 
-            new KeyValue[String, String](k, v),
+          transform(key, value).map{ case (k, v) =>
+            new KeyValue[String, String](k, v)
           }.asJava
         }
       })
-    
+
     // output to the output topic
     outStream.to(outputTopic)
 
@@ -118,11 +114,11 @@ object StreamProcessor extends StrictLogging{
   /**
     * Transform the input message by splitting into two and 
     * modifying the second one. 
-    *  
+    *
     * On the second message, add a k-v pair X:XXX if it is JSON, 
     * and if it is not JSON, append "XXX" to the end of the input 
     * string.  The keys are kept the same.
-    * 
+    *
     * @return Key-value pairs in a List[(String, String)]
     */
   def transform(key: String, value: String): List[(String, String)] = {
